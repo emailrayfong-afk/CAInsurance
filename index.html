@@ -1,6 +1,7 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CA INSURANCE: ON THE ROAD</title>
     <style>
@@ -2482,6 +2483,9 @@ const simLib = [
 let audioCtx;
 let activeSet = [], idx = 0, currentPillar = 0, sessionScore = 0, mode = 'sprint';
 
+// This stores your percentage for each of the 4 pillars (0-3)
+const pillarProgress = [0, 0, 0, 0]; 
+
 function playTone(freq, dur) {
     try {
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
@@ -2503,21 +2507,30 @@ function setMode(m) {
     document.getElementById('menu').style.display = 'block';
 }
 
+// Calculates the average of all 4 pillars and updates the UI
+function updateOverallScore() {
+    const total = pillarProgress.reduce((a, b) => a + b, 0);
+    const average = Math.round(total / 4);
+    const display = document.getElementById('overall-score-display');
+    if (display) {
+        display.innerText = "Overall Average: " + average + "%";
+    }
+}
+
 function start(pillar) {
     currentPillar = pillar;
     idx = 0; sessionScore = 0;
     
-    // Safety: Select correct library based on mode
     const sourceLib = (mode === 'sprint') ? sprintLib[pillar] : simLib[pillar];
     
-    // Safety: If library is empty, alert user instead of crashing
     if (!sourceLib || sourceLib.length === 0) {
-        alert("This pillar is empty! Please populate your arrays with questions.");
+        alert("This pillar is empty!");
         return;
     }
     
-    // Select questions based on mode
-    activeSet = [...sourceLib].slice(0, (mode === 'sprint' ? 10 : 30));
+    // Shuffles and slices
+    let shuffled = [...sourceLib].sort(() => 0.5 - Math.random());
+    activeSet = shuffled.slice(0, (mode === 'sprint' ? 10 : 30));
     
     document.getElementById('menu').style.display = 'none';
     document.getElementById('game').style.display = 'block';
@@ -2553,12 +2566,13 @@ function check(isCorrect, btn) {
         btn.style.borderColor = "#c62828";
         playTone(200, 0.2);
     }
-   let currentPct = Math.round((sessionScore / (idx + 1)) * 100);
-    document.getElementById('score-board').innerText = "Score: " + currentPct + "%";
+    
+    let currentPct = Math.round((sessionScore / (idx + 1)) * 100);
+    // This updates the local session score board
+    document.getElementById('score-board').innerText = "Session Score: " + currentPct + "%";
     
     document.getElementById('next').style.display = 'block';
 }
-
 
 function next() {
     idx++;
@@ -2566,8 +2580,18 @@ function next() {
         updateVisuals();
         showQuestion();
     } else {
-        alert("Journey Complete! Score: " + Math.round((sessionScore / activeSet.length) * 100) + "%");
-        window.location.reload();
-    }
-}
+        // Save score for this pillar (currentPillar 0-3)
+        pillarProgress[currentPillar] = Math.round((sessionScore / activeSet.length) * 100);
+        updateOverallScore(); // Recalculate average
+        
+        alert("Journey Complete! Pillar Score: " + pillarProgress[currentPillar] + "%");
+        
+        // Reset view
+        document.getElementById('game').style.display = 'none';
+        document.getElementById('menu').style.display = 'block';
+    
+} // This closes the 'else' block
+} // This closes the 'next()' function
 </script>
+</body>
+</html>
