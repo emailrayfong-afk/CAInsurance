@@ -48,6 +48,8 @@
     <div id="status-line" style="font-size:11px; color:#666; font-weight:bold; margin-bottom:10px;"></div>
     
     <div id="q-area"></div>
+    <div id="explanation-area" style="display:none; margin-top:20px; padding:15px; background:#fff9c4; border-left:5px solid #fbc02d; font-size:0.95em; border-radius:4px;"></div>
+    
     <button id="next" class="nav-btn" onclick="next()">NEXT MILE ></button>
 </div>
 <script>
@@ -2534,6 +2536,10 @@ function start(pillar) {
     
     document.getElementById('menu').style.display = 'none';
     document.getElementById('game').style.display = 'block';
+    
+    // Reset explanation
+    document.getElementById('explanation-area').style.display = 'none';
+    
     updateVisuals();
     showQuestion();
 }
@@ -2546,6 +2552,8 @@ function updateVisuals() {
 
 function showQuestion() {
     document.getElementById('next').style.display = 'none';
+    document.getElementById('explanation-area').style.display = 'none';
+    
     const q = activeSet[idx];
     document.getElementById('status-line').innerText = `PILLAR 0${currentPillar + 1} | MILE ${idx + 1} OF ${activeSet.length}`;
     
@@ -2555,22 +2563,34 @@ function showQuestion() {
 }
 
 function check(isCorrect, btn) {
-    document.querySelectorAll('.ans-btn').forEach(b => b.disabled = true);
+    document.querySelectorAll('.ans-btn').forEach((b, i) => {
+        b.disabled = true;
+        // Highlight correct answer in green
+        if (i === activeSet[idx].a) {
+            b.style.background = "#e8f5e9";
+            b.style.borderColor = "#2e7d32";
+        }
+        // Highlight clicked wrong answer in red
+        else if (b === btn && !isCorrect) {
+            b.style.background = "#ffebee";
+            b.style.borderColor = "#c62828";
+        }
+    });
+
     if (isCorrect) {
-        btn.style.background = "#e8f5e9";
-        btn.style.borderColor = "#2e7d32";
         sessionScore++;
         playTone(600, 0.1);
     } else {
-        btn.style.background = "#ffebee";
-        btn.style.borderColor = "#c62828";
         playTone(200, 0.2);
     }
     
-    let currentPct = Math.round((sessionScore / (idx + 1)) * 100);
-    // This updates the local session score board
-    document.getElementById('score-board').innerText = "Session Score: " + currentPct + "%";
+    // Show explanation
+    const expl = document.getElementById('explanation-area');
+    expl.innerHTML = `<strong>EXPLANATION:</strong><br>${activeSet[idx].f}`;
+    expl.style.display = 'block';
     
+    let currentPct = Math.round((sessionScore / (idx + 1)) * 100);
+    document.getElementById('score-board').innerText = "Session Score: " + currentPct + "%";
     document.getElementById('next').style.display = 'block';
 }
 
@@ -2580,18 +2600,15 @@ function next() {
         updateVisuals();
         showQuestion();
     } else {
-        // Save score for this pillar (currentPillar 0-3)
         pillarProgress[currentPillar] = Math.round((sessionScore / activeSet.length) * 100);
-        updateOverallScore(); // Recalculate average
+        updateOverallScore();
         
         alert("Journey Complete! Pillar Score: " + pillarProgress[currentPillar] + "%");
         
-        // Reset view
         document.getElementById('game').style.display = 'none';
         document.getElementById('menu').style.display = 'block';
-    
-} // This closes the 'else' block
-} // This closes the 'next()' function
+    }
+}
 </script>
 </body>
 </html>
