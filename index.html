@@ -30,6 +30,7 @@
         <h1>CA INSURANCE: ON THE ROAD</h1>
         <div class="road-pad"><div id="car" class="shake">🚗</div></div>
         <div class="fuel-bar"><div id="gas-fill"></div></div>
+<div id="score-board" style="text-align: center; font-weight: bold; margin: 10px 0;">Score: 0%</div>
         <div id="menu">
             <div class="mode-toggle">
                 <button id="mode-sprint" class="mode-btn active" onclick="setMode('sprint')">SPRINT</button>
@@ -2552,8 +2553,12 @@ function check(isCorrect, btn) {
         btn.style.borderColor = "#c62828";
         playTone(200, 0.2);
     }
+   let currentPct = Math.round((sessionScore / (idx + 1)) * 100);
+    document.getElementById('score-board').innerText = "Score: " + currentPct + "%";
+    
     document.getElementById('next').style.display = 'block';
 }
+
 
 function next() {
     idx++;
