@@ -8,18 +8,24 @@
         :root { --road-dark: #333; --road-lines: #ffd600; --gas-fill: #2e7d32; --text-dark: #212121; --bg-grey: #e0e0e0; }
         body { background: var(--bg-grey); font-family: sans-serif; padding: 10px; }
         .hud-container { border: 4px solid #212121; max-width: 800px; margin: auto; padding: 20px; background: #fff; border-radius: 12px; }
+        
         .road-pad { height: 100px; background: var(--road-dark); position: relative; margin: 15px 0; border-radius: 5px; overflow: hidden; border: 2px solid #000; }
         .road-pad::after { content: ''; position: absolute; top: 50%; width: 100%; height: 4px; background: repeating-linear-gradient(90deg, var(--road-lines), var(--road-lines) 20px, transparent 20px, transparent 40px); }
         #car { position: absolute; bottom: 10px; left: 5%; font-size: 40px; transition: left 0.5s linear; z-index: 5; transform: scaleX(-1); }
         .shake { animation: driveShake 0.1s linear infinite; }
         @keyframes driveShake { 0%, 100% { transform: scaleX(-1) translateY(0); } 50% { transform: scaleX(-1) translateY(-2px); } }
+        
         .fuel-bar { width: 100%; background: #eee; height: 30px; margin-top: 5px; border-radius: 15px; overflow: hidden; border: 1px solid #ccc; position: relative; }
         #gas-fill { background: var(--gas-fill); width: 0%; height: 100%; transition: width 0.5s; }
+        #total-text { position: absolute; width: 100%; text-align: center; color: #fff; font-size: 12px; line-height: 30px; font-weight: bold; top: 0; left: 0; z-index: 5; text-shadow: 1px 1px 2px rgba(0,0,0,0.5); }
+        
         .mode-toggle { display: flex; background: #eee; border-radius: 25px; margin: 15px 0; padding: 5px; }
         .mode-btn { flex: 1; border: none; padding: 12px; border-radius: 20px; cursor: pointer; font-weight: bold; background: none; }
         .mode-btn.active { background: #212121; color: white; }
+        
         .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
         .p-btn { background: #fff; border: 2px solid #212121; padding: 15px; cursor: pointer; font-weight: bold; border-radius: 6px; }
+        
         .q-text { font-size: 1.1em; margin-bottom: 20px; border-left: 5px solid #212121; padding-left: 15px; font-weight: bold; }
         .ans-btn { display: block; width: 100%; padding: 16px; margin: 8px 0; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; text-align: left; font-weight: bold; cursor: pointer; }
         #feedback { margin: 15px 0; padding: 15px; border-radius: 8px; font-weight: bold; display: none; background: #f0f4ff; border: 1px solid #ddd; }
@@ -30,9 +36,13 @@
     <div class="hud-container">
         <h1>CA INSURANCE: ON THE ROAD</h1>
         <div class="road-pad"><div id="car" class="shake">🚚</div></div>
-        <div class="fuel-bar"><div id="gas-fill"></div></div>
+        <div class="fuel-bar">
+            <div id="total-text">FLIGHT READINESS: 0%</div>
+            <div id="gas-fill"></div>
+        </div>
         
         <div id="menu">
+            <h3 style="margin-top:20px;">Overall Readiness: <span id="overall-score">0%</span></h3>
             <div class="mode-toggle">
                 <button id="mode-sprint" class="mode-btn active" onclick="setMode('sprint')">SPRINT</button>
                 <button id="mode-sim" class="mode-btn" onclick="setMode('sim')">SIM</button>
@@ -2481,85 +2491,109 @@ const simLib = [
     ]
 ];
 
-// --- ENGINE LOGIC ---
-let audioCtx;
-let gameState = { mode: 'sprint', idx: 0, currentPillar: 0, sessionScore: 0, activeSet: [], originalSetLength: 0 };
-let globalScores = { sprint: [0,0,0,0], sim: [0,0,0,0] };
+// --- 2. ENGINE LOGIC ---
+    let audioCtx;
+    let gameState = { mode: 'sprint', idx: 0, currentPillar: 0, sessionScore: 0, activeSet: [], originalSetLength: 0 };
+    let globalScores = { sprint: [0,0,0,0], sim: [0,0,0,0] };
 
-function setMode(m) { 
-    if (gameState.mode !== m) { gameState.mode = m; window.location.reload(); } 
-}
-
-function start(pillar) {
-    if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    gameState.currentPillar = pillar; gameState.idx = 0; gameState.sessionScore = 0;
-    const lib = (gameState.mode === 'sprint') ? sprintLib[pillar] : simLib[pillar];
-    const target = (gameState.mode === 'sprint') ? 25 : [8,17,30,45][pillar];
-    let pool = [...lib].sort(() => 0.5 - Math.random());
-    gameState.activeSet = pool.slice(0, Math.min(target, lib.length));
-    gameState.originalSetLength = gameState.activeSet.length;
-    document.getElementById('menu').style.display = 'none';
-    document.getElementById('game').style.display = 'block';
-    showQuestion();
-}
-
-function showQuestion() {
-    const q = gameState.activeSet[gameState.idx];
-    document.getElementById('status-line').innerText = q.isRetry ? `PILLAR 0${gameState.currentPillar + 1} | RETRYING MISSED` : `PILLAR 0${gameState.currentPillar + 1} | GATE ${gameState.idx + 1} OF ${gameState.originalSetLength}`;
-    let choices = q.c.map((text, i) => ({ text, isCorrect: i === q.a })).sort(() => 0.5 - Math.random());
-    let html = `<div class="q-text">${q.q}</div>`;
-    choices.forEach(c => html += `<button class="ans-btn" onclick="check(${c.isCorrect}, this)">${c.text}</button>`);
-    document.getElementById('q-area').innerHTML = html;
-    document.getElementById('feedback').style.display = 'none';
-    document.getElementById('next').style.display = 'none';
-    let pct = (gameState.idx / gameState.originalSetLength) * 100;
-    document.getElementById('car').style.left = (pct * 0.8) + '%';
-}
-
-function check(isCorrect, btn) {
-    const q = gameState.activeSet[gameState.idx];
-    document.querySelectorAll('.ans-btn').forEach(b => b.disabled = true);
-    if (isCorrect) {
-        btn.style.background = "#e8f5e9";
-        if (!q.isRetry) gameState.sessionScore++;
-    } else {
-        btn.style.background = "#ffebee";
-        if (gameState.mode === 'sprint') {
-            let retry = JSON.parse(JSON.stringify(q)); retry.isRetry = true; gameState.activeSet.push(retry);
-        }
+    function playTone(freq, dur) {
+        try {
+            if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (audioCtx.state === 'suspended') audioCtx.resume();
+            const osc = audioCtx.createOscillator();
+            const g = audioCtx.createGain();
+            osc.connect(g); g.connect(audioCtx.destination);
+            osc.frequency.value = freq;
+            g.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            osc.start(); osc.stop(audioCtx.currentTime + dur);
+        } catch(e) { }
     }
-    document.getElementById('feedback').innerHTML = `<strong>${isCorrect ? '✅' : '❌'}</strong> ${q.f}`;
-    document.getElementById('feedback').style.display = 'block';
-    document.getElementById('next').style.display = 'block';
-}
 
-function next() {
-    gameState.idx++;
-    if (gameState.idx < gameState.activeSet.length) showQuestion();
-    else endSession();
-}
+    function setMode(m) { 
+        if (gameState.mode !== m) { gameState.mode = m; window.location.reload(); } 
+    }
 
-function endSession() {
-    const pct = Math.round((gameState.sessionScore / gameState.originalSetLength) * 100);
-    globalScores[gameState.mode][gameState.currentPillar] = Math.max(pct, globalScores[gameState.mode][gameState.currentPillar]);
-    localStorage.setItem('artemis_global', JSON.stringify(globalScores));
-    document.getElementById('game').style.display = 'none';
-    document.getElementById('menu').style.display = 'block';
-    updateFuel();
-}
+    function start(pillar) {
+        if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+        gameState.currentPillar = pillar; gameState.idx = 0; gameState.sessionScore = 0;
+        
+        const lib = (gameState.mode === 'sprint') ? sprintLib[pillar] : simLib[pillar];
+        if (!lib || lib.length === 0) { alert("Library empty for this pillar!"); return; }
 
-function updateFuel() {
-    const scores = globalScores[gameState.mode] || [0,0,0,0];
-    const avg = Math.round(scores.reduce((a,b) => a+b, 0) / 4);
-    document.getElementById('gas-fill').style.width = avg + '%';
-    scores.forEach((s, i) => { let el = document.getElementById(`s${i}`); if(el) el.innerText = s + '%'; });
-}
+        const target = (gameState.mode === 'sprint') ? 25 : [8,17,30,45][pillar];
+        let pool = [...lib].sort(() => 0.5 - Math.random());
+        gameState.activeSet = pool.slice(0, Math.min(target, lib.length));
+        gameState.originalSetLength = gameState.activeSet.length;
+        
+        document.getElementById('menu').style.display = 'none';
+        document.getElementById('game').style.display = 'block';
+        showQuestion();
+    }
 
-window.onload = () => {
-    const saved = localStorage.getItem('artemis_global');
-    if (saved) globalScores = JSON.parse(saved);
-    updateFuel();
-};
+    function showQuestion() {
+        const q = gameState.activeSet[gameState.idx];
+        document.getElementById('status-line').innerText = q.isRetry ? `PILLAR 0${gameState.currentPillar + 1} | RETRYING MISSED` : `PILLAR 0${gameState.currentPillar + 1} | GATE ${gameState.idx + 1} OF ${gameState.originalSetLength}`;
+        
+        let choices = q.c.map((text, i) => ({ text, isCorrect: i === q.a })).sort(() => 0.5 - Math.random());
+        let html = `<div class="q-text">${q.q}</div>`;
+        choices.forEach(c => html += `<button class="ans-btn" onclick="check(${c.isCorrect}, this)">${c.text}</button>`);
+        
+        document.getElementById('q-area').innerHTML = html;
+        document.getElementById('feedback').style.display = 'none';
+        document.getElementById('next').style.display = 'none';
+        
+        let pct = (gameState.idx / gameState.originalSetLength) * 100;
+        document.getElementById('car').style.left = (pct * 0.8) + '%';
+    }
+
+    function check(isCorrect, btn) {
+        const q = gameState.activeSet[gameState.idx];
+        document.querySelectorAll('.ans-btn').forEach(b => b.disabled = true);
+        if (isCorrect) {
+            btn.style.background = "#e8f5e9";
+            if (!q.isRetry) gameState.sessionScore++;
+            playTone(600, 0.1);
+        } else {
+            btn.style.background = "#ffebee";
+            playTone(200, 0.2);
+            if (gameState.mode === 'sprint') {
+                let retry = JSON.parse(JSON.stringify(q)); retry.isRetry = true; gameState.activeSet.push(retry);
+            }
+        }
+        document.getElementById('feedback').innerHTML = `<strong>${isCorrect ? '✅' : '❌'}</strong> ${q.f}`;
+        document.getElementById('feedback').style.display = 'block';
+        document.getElementById('next').style.display = 'block';
+    }
+
+    function next() {
+        gameState.idx++;
+        if (gameState.idx < gameState.activeSet.length) showQuestion();
+        else endSession();
+    }
+
+    function endSession() {
+        const pct = Math.round((gameState.sessionScore / gameState.originalSetLength) * 100);
+        globalScores[gameState.mode][gameState.currentPillar] = Math.max(pct, globalScores[gameState.mode][gameState.currentPillar]);
+        localStorage.setItem('artemis_global', JSON.stringify(globalScores));
+        document.getElementById('game').style.display = 'none';
+        document.getElementById('menu').style.display = 'block';
+        updateFuel();
+    }
+
+    function updateFuel() {
+        const scores = globalScores[gameState.mode] || [0,0,0,0];
+        const avg = Math.round(scores.reduce((a,b) => a+b, 0) / 4);
+        document.getElementById('gas-fill').style.width = avg + '%';
+        document.getElementById('overall-score').innerText = avg + '%';
+        document.getElementById('total-text').innerText = `FLIGHT READINESS: ${avg}%`;
+        scores.forEach((s, i) => { let el = document.getElementById(`s${i}`); if(el) el.innerText = s + '%'; });
+    }
+
+    window.onload = () => {
+        const saved = localStorage.getItem('artemis_global');
+        if (saved) globalScores = JSON.parse(saved);
+        updateFuel();
+    };
 </script>
 </body>
 </html>
