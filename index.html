@@ -2588,7 +2588,7 @@ const simLib = [
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         gameState.currentPillar = pillar; gameState.idx = 0; gameState.sessionScore = 0;
-        const simCounts = [20, 17, 30, 45];
+        const simCounts = [12, 23, 23, 17];
         const target = (gameState.mode === 'sprint') ? 25 : simCounts[pillar];
         
         let pool = [...lib].sort(() => 0.5 - Math.random());
