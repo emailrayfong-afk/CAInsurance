@@ -2600,13 +2600,15 @@ const simLib = [
         showQuestion();
     }
 
-    function showQuestion() {
+function showQuestion() {
         const q = gameState.activeSet[gameState.idx];
         document.getElementById('status-line').innerText = q.isRetry ? `PILLAR 0${gameState.currentPillar + 1} | RETRYING` : `PILLAR 0${gameState.currentPillar + 1} | GATE ${gameState.idx + 1} OF ${gameState.originalSetLength}`;
         
         let choices = q.c.map((text, i) => ({ text, isCorrect: i === q.a })).sort(() => 0.5 - Math.random());
         let html = `<div class="q-text">${q.q}</div>`;
-        choices.forEach(c => html += `<button class="ans-btn" onclick="check(${c.isCorrect}, this)">${c.text}</button>`);
+        
+        // ADDED data-correct attribute to help the check() function
+        choices.forEach(c => html += `<button class="ans-btn" data-correct="${c.isCorrect}" onclick="check(${c.isCorrect}, this)">${c.text}</button>`);
         
         document.getElementById('q-area').innerHTML = html;
         document.getElementById('feedback').style.display = 'none';
@@ -2616,21 +2618,33 @@ const simLib = [
         document.getElementById('car').style.left = (pct * 0.8) + '%';
     }
 
-    function check(isCorrect, btn) {
-        const q = gameState.activeSet[gameState.idx];
-        document.querySelectorAll('.ans-btn').forEach(b => b.disabled = true);
+function check(isCorrect, btn) {
+        // Disable all buttons so user cannot click twice
+        document.querySelectorAll('.ans-btn').forEach(b => {
+            b.disabled = true;
+            // Reveal the correct answer for the user even if they didn't pick it
+            if(b.dataset.correct === "true") {
+                b.style.setProperty("background-color", "#e8f5e9", "important");
+                b.style.setProperty("border-color", "#27ae60", "important");
+            }
+        });
+
         if (isCorrect) {
-            btn.style.background = "#e8f5e9";
-            if (!q.isRetry) gameState.sessionScore++;
+            btn.style.setProperty("background-color", "#e8f5e9", "important");
+            btn.style.setProperty("border-color", "#27ae60", "important");
+            if (!gameState.activeSet[gameState.idx].isRetry) gameState.sessionScore++;
             playTone(600, 0.1);
         } else {
-            btn.style.background = "#ffebee";
+            btn.style.setProperty("background-color", "#ffebee", "important");
+            btn.style.setProperty("border-color", "#e74c3c", "important");
             playTone(200, 0.2);
             if (gameState.mode === 'sprint') {
-                let retry = JSON.parse(JSON.stringify(q)); retry.isRetry = true; gameState.activeSet.push(retry);
+                let retry = JSON.parse(JSON.stringify(gameState.activeSet[gameState.idx]));
+                retry.isRetry = true;
+                gameState.activeSet.push(retry);
             }
         }
-        document.getElementById('feedback').innerHTML = `<strong>${isCorrect ? '✅' : '❌'}</strong> ${q.f}`;
+        document.getElementById('feedback').innerHTML = `<strong>${isCorrect ? '✅' : '❌'}</strong> ${gameState.activeSet[gameState.idx].f}`;
         document.getElementById('feedback').style.display = 'block';
         document.getElementById('next').style.display = 'block';
     }
