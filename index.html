@@ -4,27 +4,94 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>CA INSURANCE: ON THE ROAD</title>
-    <style>
-        :root { --road-dark: #333; --road-lines: #ffd600; --gas-fill: #2e7d32; --text-dark: #212121; --bg-grey: #e0e0e0; }
-        body { background: var(--bg-grey); font-family: sans-serif; padding: 10px; }
-        .hud-container { border: 4px solid #212121; max-width: 800px; margin: auto; padding: 20px; background: #fff; border-radius: 12px; }
-        .road-pad { height: 100px; background: var(--road-dark); position: relative; margin: 15px 0; border-radius: 5px; overflow: hidden; border: 2px solid #000; }
-        .road-pad::after { content: ''; position: absolute; top: 50%; width: 100%; height: 4px; background: repeating-linear-gradient(90deg, var(--road-lines), var(--road-lines) 20px, transparent 20px, transparent 40px); }
-        #car { position: absolute; bottom: 10px; left: 5%; font-size: 40px; transition: left 0.5s linear; z-index: 5; transform: scaleX(-1); }
-        .shake { animation: driveShake 0.1s linear infinite; }
-        @keyframes driveShake { 0%, 100% { transform: scaleX(-1) translateY(0); } 50% { transform: scaleX(-1) translateY(-2px); } }
-        .fuel-bar { width: 100%; background: #eee; height: 30px; margin-top: 5px; border-radius: 15px; overflow: hidden; border: 1px solid #ccc; position: relative; }
-        #gas-fill { background: var(--gas-fill); width: 0%; height: 100%; transition: width 0.5s; }
-        .mode-toggle { display: flex; background: #eee; border-radius: 25px; margin: 15px 0; padding: 5px; }
-        .mode-btn { flex: 1; border: none; padding: 12px; border-radius: 20px; cursor: pointer; font-weight: bold; background: none; }
-        .mode-btn.active { background: #212121; color: white; }
-        .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-top: 10px; }
-        .p-btn { background: #fff; border: 2px solid #212121; padding: 15px; cursor: pointer; font-weight: bold; border-radius: 6px; }
-        .q-text { font-size: 1.1em; margin-bottom: 20px; border-left: 5px solid #212121; padding-left: 15px; font-weight: bold; }
-        .ans-btn { display: block; width: 100%; padding: 16px; margin: 8px 0; background: #f9f9f9; border: 1px solid #ddd; border-radius: 8px; text-align: left; font-weight: bold; cursor: pointer; }
-        #feedback { margin: 15px 0; padding: 15px; border-radius: 8px; font-weight: bold; display: none; background: #f0f4ff; border: 1px solid #ddd; }
-        .nav-btn { background: #212121; color: #fff; padding: 18px; border: none; width: 100%; display: none; cursor: pointer; border-radius: 8px; margin-top: 10px; }
-    </style>
+<style>
+    :root {
+        --bg-color: #f0f2f5;
+        --card-bg: #ffffff;
+        --primary-color: #2c3e50;
+        --accent-color: #3498db;
+        --road-color: #2d3436;
+        --line-color: #f1c40f;
+        --success: #27ae60;
+        --error: #e74c3c;
+    }
+
+    body { 
+        background: var(--bg-color); 
+        font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; 
+        padding: 20px; 
+    }
+
+    .hud-container { 
+        max-width: 600px; 
+        margin: auto; 
+        padding: 25px; 
+        background: var(--card-bg); 
+        border-radius: 16px; 
+        box-shadow: 0 10px 25px rgba(0,0,0,0.1); 
+    }
+
+    h1 { font-size: 1.5rem; color: var(--primary-color); text-align: center; margin-bottom: 20px; }
+
+    /* Road Styling */
+    .road-pad { 
+        height: 100px; 
+        background: var(--road-color); 
+        position: relative; 
+        margin: 20px 0; 
+        border-radius: 8px; 
+        overflow: hidden; 
+        box-shadow: inset 0 0 10px rgba(0,0,0,0.5);
+    }
+    .road-pad::after { 
+        content: ''; position: absolute; top: 50%; width: 100%; height: 6px; 
+        background: repeating-linear-gradient(90deg, var(--line-color), var(--line-color) 30px, transparent 30px, transparent 60px); 
+    }
+    #car { 
+        position: absolute; bottom: 10px; left: 5%; font-size: 40px; 
+        transition: left 0.5s cubic-bezier(0.4, 0, 0.2, 1); z-index: 5; transform: scaleX(-1); 
+    }
+.shake { animation: driveShake 0.1s linear infinite; }
+
+@keyframes driveShake { 
+    0%, 100% { transform: scaleX(-1) translateY(0); } 
+    50% { transform: scaleX(-1) translateY(-2px); } 
+}
+
+    /* Fuel Bar */
+    .fuel-bar { 
+        width: 100%; background: #dfe6e9; height: 20px; margin: 10px 0; 
+        border-radius: 10px; overflow: hidden; 
+    }
+    #gas-fill { background: var(--success); width: 0%; height: 100%; transition: width 0.5s; }
+
+    /* Buttons & UI */
+    .mode-toggle { display: flex; background: #dfe6e9; border-radius: 8px; margin-bottom: 20px; padding: 4px; }
+    .mode-btn { flex: 1; border: none; padding: 10px; border-radius: 6px; cursor: pointer; font-weight: bold; background: none; transition: 0.3s; }
+    .mode-btn.active { background: var(--primary-color); color: white; box-shadow: 0 2px 5px rgba(0,0,0,0.2); }
+
+    .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+    .p-btn { 
+        background: var(--card-bg); border: 2px solid #dfe6e9; padding: 15px; 
+        cursor: pointer; font-weight: bold; border-radius: 8px; transition: 0.2s; 
+    }
+    .p-btn:hover { border-color: var(--accent-color); transform: translateY(-2px); }
+
+    .q-text { font-size: 1.1em; color: #2d3436; margin-bottom: 20px; padding-left: 15px; border-left: 4px solid var(--accent-color); font-weight: 600; }
+    .ans-btn { 
+        display: block; width: 100%; padding: 14px; margin: 10px 0; 
+        background: #f8f9fa; border: 1px solid #dfe6e9; border-radius: 8px; 
+        text-align: left; font-weight: 600; cursor: pointer; transition: 0.2s; 
+    }
+    .ans-btn:hover { background: #eef2f7; border-color: var(--accent-color); }
+
+    #feedback { margin: 20px 0; padding: 15px; border-radius: 8px; font-weight: bold; display: none; background: #ebf5fb; border-left: 4px solid var(--accent-color); }
+    .nav-btn { 
+        background: var(--primary-color); color: #fff; padding: 15px; border: none; width: 100%; 
+        cursor: pointer; border-radius: 8px; font-weight: bold; margin-top: 10px; 
+    }
+    .nav-btn:hover { opacity: 0.9; }
+</style>
 </head>
 <body>
     <div class="hud-container">
@@ -2482,7 +2549,7 @@ const simLib = [
         }
     ]
 ];
-// --- ENGINE LOGIC ---
+// --- 2. ENGINE LOGIC ---
     let audioCtx;
     let gameState = { mode: 'sprint', idx: 0, currentPillar: 0, sessionScore: 0, activeSet: [], originalSetLength: 0 };
     let globalScores = { sprint: [0,0,0,0], sim: [0,0,0,0] };
@@ -2510,12 +2577,8 @@ const simLib = [
     function setMode(m) { 
         gameState.mode = m;
         localStorage.setItem('artemis_mode', m);
-        updateUIButtons();
-    }
-
-    function updateUIButtons() {
-        document.getElementById('mode-sprint').classList.toggle('active', gameState.mode === 'sprint');
-        document.getElementById('mode-sim').classList.toggle('active', gameState.mode === 'sim');
+        document.getElementById('mode-sprint').classList.toggle('active', m === 'sprint');
+        document.getElementById('mode-sim').classList.toggle('active', m === 'sim');
     }
 
     function start(pillar) {
@@ -2525,7 +2588,8 @@ const simLib = [
         if (!audioCtx) audioCtx = new (window.AudioContext || window.webkitAudioContext)();
         
         gameState.currentPillar = pillar; gameState.idx = 0; gameState.sessionScore = 0;
-        const target = (gameState.mode === 'sprint') ? 25 : [8,17,30,45][pillar];
+        const simCounts = [20, 17, 30, 45];
+        const target = (gameState.mode === 'sprint') ? 25 : simCounts[pillar];
         
         let pool = [...lib].sort(() => 0.5 - Math.random());
         gameState.activeSet = pool.slice(0, Math.min(target, lib.length));
@@ -2548,7 +2612,7 @@ const simLib = [
         document.getElementById('feedback').style.display = 'none';
         document.getElementById('next').style.display = 'none';
         
-        let pct = gameState.originalSetLength > 0 ? (gameState.idx / gameState.originalSetLength) * 100 : 0;
+        let pct = (gameState.originalSetLength > 0) ? (gameState.idx / gameState.originalSetLength) * 100 : 0;
         document.getElementById('car').style.left = (pct * 0.8) + '%';
     }
 
@@ -2581,9 +2645,39 @@ const simLib = [
         const pct = Math.round((gameState.sessionScore / gameState.originalSetLength) * 100);
         globalScores[gameState.mode][gameState.currentPillar] = Math.max(pct, globalScores[gameState.mode][gameState.currentPillar]);
         localStorage.setItem('artemis_global', JSON.stringify(globalScores));
-        document.getElementById('game').style.display = 'none';
-        document.getElementById('menu').style.display = 'block';
-        updateFuel();
+        
+        // Count how many pillars have a score > 0
+        const completedCount = globalScores[gameState.mode].filter(s => s > 0).length;
+
+        // Trigger animation only if all 4 are completed
+        if (completedCount === 4) {
+            const car = document.getElementById('car');
+            const avg = Math.round(globalScores[gameState.mode].reduce((a, b) => a + b, 0) / 4);
+            
+            if (avg >= 73) {
+                car.innerText = "🎆"; 
+                car.classList.add('win-anim');
+                playTone(800, 0.5);
+            } else {
+                car.innerText = "💥"; 
+                car.classList.add('fail-anim');
+                playTone(150, 0.5);
+            }
+
+            setTimeout(() => {
+                car.classList.remove('win-anim', 'fail-anim');
+                car.innerText = "🚚"; 
+                car.style.left = "5%";
+                document.getElementById('game').style.display = 'none';
+                document.getElementById('menu').style.display = 'block';
+                updateFuel();
+            }, 2000);
+        } else {
+            // No animation, just return to menu
+            document.getElementById('game').style.display = 'none';
+            document.getElementById('menu').style.display = 'block';
+            updateFuel();
+        }
     }
 
     function updateFuel() {
@@ -2596,7 +2690,7 @@ const simLib = [
 
     window.onload = () => {
         const savedMode = localStorage.getItem('artemis_mode');
-        if (savedMode) { gameState.mode = savedMode; updateUIButtons(); }
+        if (savedMode) { gameState.mode = savedMode; setMode(savedMode); }
         const savedGlobal = localStorage.getItem('artemis_global');
         if (savedGlobal) globalScores = JSON.parse(savedGlobal);
         updateFuel();
