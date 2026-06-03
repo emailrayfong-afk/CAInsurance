@@ -180,7 +180,10 @@ const sprintLib = [
         {q: "The legal doctrine preventing an insurer from denying a claim based on a previous agent statement is:", c: ["Estoppel", "Adverse Selection"], a: 0, f: "Logic: Estoppel 'stops' a party from going back on a promise another party relied upon."}
     ],
 [ // PILLAR 2: LIFE INSURANCE & TAXATION (50 Questions)
-        {q: "If a policy fails the 7-pay test, it is classified as a:", c: ["Modified Endowment Contract (MEC)", "Variable Universal Life (VUL) policy"], a: 0, f: "Logic: Breaching the 7-pay limit turns the policy into a MEC, permanently altering its tax status."},
+        {q: "If a policy fails the 7-pay test, it is classified as a:", c: ["Modified Endowment Contract (MEC)", "Variable Universal Life (VUL) policy"], a: 0, f: "Logic: Breaching the 7-pay limit turns the policy into a MEC, permanently altering its tax status."},{q: "What is a 'Level Premium' life insurance policy?", c: ["The premium remains the same for the entire life of the policy", "The premium increases every year as the insured gets older"], a: 0, f: "Logic: Level premium means the cost is spread out evenly over the life of the policy, despite mortality risk increasing with age."},
+{q: "Which type of term insurance features a premium that increases annually upon renewal?", c: ["Annually Renewable Term", "Level Term"], a: 0, f: "Logic: Because the risk of death increases with age, an annually renewable term policy must charge a higher premium each year it renews."},
+{q: "What is 'Increasing Term' insurance?", c: ["A policy where the death benefit increases over time", "A policy where the death benefit decreases over time"], a: 0, f: "Logic: Increasing term is often used to return premiums paid or to keep up with inflation; the benefit rises as the policy ages."},
+{q: "A Return of Premium (ROP) rider is essentially a type of:", c: ["Increasing Term insurance", "Decreasing Term insurance"], a: 0, f: "Logic: To return the premiums you paid, the insurer uses an increasing term rider to build up the 'refund' amount."},
         {q: "Cash value loans taken from a Modified Endowment Contract (MEC) are taxed on what basis?", c: ["LIFO (Last-In, First-Out)", "FIFO (First-In, First-Out)"], a: 0, f: "Logic: MECs strip the tax-free loan privilege, forcing earnings out first as taxable ordinary income."},
         {q: "An early withdrawal from a MEC before age 59.5 triggers an additional IRS penalty of:", c: ["10%", "50%"], a: 0, f: "Logic: Like an IRA, MEC early distributions face a 10% penalty on the taxable earnings."},
         {q: "A lump-sum life insurance death benefit paid to a named beneficiary is generally:", c: ["Tax-free", "Taxable as ordinary income"], a: 0, f: "Logic: Death benefits pass to beneficiaries entirely free of federal income tax."},
@@ -903,6 +906,49 @@ const simLib = [
             ],
             a: 0,
             f: "Logic: Failing the 7-pay test makes the policy a Modified Endowment Contract (MEC). This strips the tax-free loan privilege, forcing LIFO taxation and a 10% penalty if under age 59.5."
+        },{
+            q: "What characterizes a 'Level Premium' life insurance policy?",
+            c: [
+                "The premium remains fixed for the entire life of the policy.",
+                "The premium increases annually based on the insured's attained age.",
+                "The premium is paid only during the first 10 years of the policy.",
+                "The premium fluctuates based on the insurance company's stock dividends."
+            ],
+            a: 0,
+            f: "Logic: Level premium means the cost is spread out evenly over the life of the policy, despite the fact that mortality risk increases with age."
+        },
+        {
+            q: "Which of the following best describes Annually Renewable Term (ART) insurance?",
+            c: [
+                "The premium increases annually upon renewal because the insured is one year older.",
+                "The premium remains level for 20 years, but the death benefit decreases annually.",
+                "The premium is paid as a single lump sum at the inception of the contract.",
+                "The premium is determined by the cash value growth of the policy."
+            ],
+            a: 0,
+            f: "Logic: Because the statistical risk of death increases with age, an annually renewable term policy must charge a higher premium each year it renews."
+        },
+        {
+            q: "Which life insurance product features a death benefit that gradually rises over the policy term, often used to offset inflation?",
+            c: [
+                "Increasing Term Insurance",
+                "Decreasing Term Insurance",
+                "Level Term Insurance",
+                "Industrial Life Insurance"
+            ],
+            a: 0,
+            f: "Logic: Increasing term is often used to provide extra coverage that grows over time; the benefit rises as the policy ages."
+        },
+        {
+            q: "A 'Return of Premium' (ROP) rider is essentially a type of which insurance product?",
+            c: [
+                "Increasing Term insurance",
+                "Decreasing Term insurance",
+                "Whole Life insurance",
+                "Modified Endowment Contract"
+            ],
+            a: 0,
+            f: "Logic: To return the premiums you paid at the end of the term, the insurer uses an increasing term rider that grows to match the total premiums you paid."
         },
         {
             q: "Under an active Whole Life insurance policy, what occurs if the policyowner dies during the 31-day grace period without having paid the currently due premium?",
@@ -2638,11 +2684,9 @@ function check(isCorrect, btn) {
             btn.style.setProperty("background-color", "#ffebee", "important");
             btn.style.setProperty("border-color", "#e74c3c", "important");
             playTone(200, 0.2);
-            if (gameState.mode === 'sprint') {
-                let retry = JSON.parse(JSON.stringify(gameState.activeSet[gameState.idx]));
-                retry.isRetry = true;
-                gameState.activeSet.push(retry);
-            }
+let retry = JSON.parse(JSON.stringify(gameState.activeSet[gameState.idx]));
+            retry.isRetry = true;
+            gameState.activeSet.push(retry);
         }
         document.getElementById('feedback').innerHTML = `<strong>${isCorrect ? '✅' : '❌'}</strong> ${gameState.activeSet[gameState.idx].f}`;
         document.getElementById('feedback').style.display = 'block';
