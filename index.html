@@ -2789,19 +2789,22 @@ let retry = JSON.parse(JSON.stringify(gameState.activeSet[gameState.idx]));
         const completedCount = globalScores[gameState.mode].filter(s => s > 0).length;
 
         // Trigger animation only if all 4 are completed
-        if (completedCount === 4) {
-            const car = document.getElementById('car');
-            const avg = Math.round(globalScores[gameState.mode].reduce((a, b) => a + b, 0) / 4);
-            
-            if (avg >= 60) {
-                car.innerText = "🎆"; 
-                car.classList.add('win-anim');
-                playTone(800, 0.5);
-            } else {
-                car.innerText = "💥"; 
-                car.classList.add('fail-anim');
-                playTone(150, 0.5);
-            }
+if (completedCount === 4) {
+        if (avg >= 60) {
+            // SUCCESS: Clear, rewarding victory
+            car.innerText = "🏆"; 
+            car.classList.add('win-anim');
+            playTone(800, 0.5); // High, happy tone
+        } else {
+            // FAILURE: A clear, calm "Stop/Review" signal
+            car.innerText = "🛑"; 
+            car.classList.add('stop-anim');
+            playTone(150, 0.5); // Low, serious tone
+        }
+    } else {
+        car.innerText = "⛽"; // Progress saved
+        playTone(400, 0.2);
+    }
 
             setTimeout(() => {
                 car.classList.remove('win-anim', 'fail-anim');
